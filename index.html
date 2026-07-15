@@ -349,8 +349,8 @@ function showToast(msg){
 
 async function loadEntries(){
   try{
-    const res = await window.storage.get(STORAGE_KEY, true);
-    entries = res && res.value ? JSON.parse(res.value) : [];
+    const raw = localStorage.getItem(STORAGE_KEY);
+    entries = raw ? JSON.parse(raw) : [];
   }catch(e){
     entries = [];
   }
@@ -359,7 +359,7 @@ async function loadEntries(){
 
 async function saveEntries(){
   try{
-    await window.storage.set(STORAGE_KEY, JSON.stringify(entries), true);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
   }catch(e){
     console.error('storage error', e);
   }
