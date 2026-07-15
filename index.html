@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>سجل العزل - خط 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --charcoal:#0e1620;
+    --charcoal-2:#141f2c;
+    --panel:#1b2836;
+    --hazard:#2f8fe0;
+    --hazard-dark:#1f6bb0;
+    --danger:#e0483f;
+    --safe:#2fb0a3;
+    --ink:#eceef1;
+    --ink-dim:#8ea0b3;
+    --line:#2a3a4a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      repeating-linear-gradient(135deg, rgba(246,180,14,0.05) 0 18px, transparent 18px 36px),
+      var(--charcoal);
+    color:var(--ink);
+    font-family:'Tajawal',sans-serif;
+    min-height:100vh;
+    padding:0 0 60px;
+  }
+  header{
+    background:var(--charcoal-2);
+    border-bottom:4px solid var(--hazard);
+    padding:22px 20px 18px;
+    position:relative;
+    overflow:hidden;
+  }
+  header::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:repeating-linear-gradient(-45deg, var(--hazard) 0 22px, var(--charcoal-2) 22px 44px);
+    opacity:0.10;
+  }
+  .header-inner{position:relative;display:flex;align-items:center;gap:14px;max-width:760px;margin:0 auto;}
+  .lock-badge{
+    width:46px;height:46px;flex:none;
+    background:var(--hazard);
+    border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:24px;
+  }
+  h1{
+    font-family:'Oswald',sans-serif;
+    font-size:22px;
+    letter-spacing:0.5px;
+    margin:0;
+    line-height:1.3;
+  }
+  .subtitle{
+    color:var(--hazard);
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:1px;
+    margin-top:2px;
+    font-family:'Oswald',sans-serif;
+    text-transform:uppercase;
+  }
+  .org-name{
+    color:var(--ink-dim);
+    font-size:12.5px;
+    font-weight:500;
+    margin-top:5px;
+  }
+  main{max-width:760px;margin:0 auto;padding:20px 16px;}
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px;
+    margin-bottom:18px;
+  }
+  .step-num{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:24px;height:24px;border-radius:6px;
+    background:var(--hazard);color:#ffffff;
+    font-family:'Oswald',sans-serif;font-weight:700;font-size:13px;
+    margin-left:8px;
+  }
+  label{
+    display:flex;align-items:center;
+    font-size:15px;font-weight:700;margin-bottom:8px;color:var(--ink);
+  }
+  input[type=text]{
+    width:100%;
+    background:var(--charcoal-2);
+    border:1.5px solid var(--line);
+    border-radius:10px;
+    color:var(--ink);
+    font-family:'Tajawal',sans-serif;
+    font-size:16px;
+    padding:13px 14px;
+    outline:none;
+    transition:border-color .15s;
+  }
+  input[type=text]:focus{border-color:var(--hazard);}
+  input[type=text]::placeholder{color:var(--ink-dim);}
+  .field{margin-bottom:16px;}
+  .field:last-child{margin-bottom:0;}
+
+  .toggle-row{display:flex;gap:10px;}
+  .toggle-btn{
+    flex:1;
+    padding:16px 8px;
+    border-radius:10px;
+    border:1.5px solid var(--line);
+    background:var(--charcoal-2);
+    color:var(--ink-dim);
+    font-family:'Tajawal',sans-serif;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    text-align:center;
+    transition:all .15s;
+  }
+  .toggle-btn .ic{display:block;font-size:22px;margin-bottom:4px;}
+  .toggle-btn.active{
+    background:var(--hazard);
+    border-color:var(--hazard);
+    color:#ffffff;
+  }
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:480px){.grid2{grid-template-columns:1fr;}}
+
+  .confirm-btn{
+    width:100%;
+    padding:18px;
+    border-radius:12px;
+    border:none;
+    background:var(--hazard);
+    color:#ffffff;
+    font-family:'Oswald',sans-serif;
+    font-size:18px;
+    font-weight:700;
+    letter-spacing:0.5px;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    transition:transform .1s, background .15s;
+  }
+  .confirm-btn:active{transform:scale(0.98);}
+  .confirm-btn:disabled{background:#4a4e57;color:#9aa0ab;cursor:not-allowed;}
+
+  .error-note{
+    color:var(--danger);
+    font-size:13px;
+    font-weight:700;
+    margin-top:10px;
+    display:none;
+  }
+
+  .toast{
+    position:fixed;
+    bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--safe);
+    color:#fff;
+    padding:14px 22px;
+    border-radius:10px;
+    font-weight:700;
+    font-size:15px;
+    opacity:0;
+    transition:all .25s;
+    pointer-events:none;
+    z-index:50;
+    box-shadow:0 8px 24px rgba(0,0,0,.4);
+    display:flex;align-items:center;gap:8px;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  .log-header{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:14px;flex-wrap:wrap;gap:10px;
+  }
+  .log-title{
+    font-family:'Oswald',sans-serif;font-size:17px;font-weight:600;
+    display:flex;align-items:center;gap:8px;
+  }
+  .count-chip{
+    background:var(--hazard);color:#ffffff;
+    font-family:'Oswald',sans-serif;font-weight:700;font-size:12px;
+    padding:3px 9px;border-radius:20px;
+  }
+  .export-btn{
+    background:var(--safe);color:#fff;
+    border:none;border-radius:8px;
+    padding:10px 16px;font-weight:700;font-size:13px;
+    font-family:'Tajawal',sans-serif;
+    cursor:pointer;display:flex;align-items:center;gap:6px;
+  }
+  .export-btn:disabled{background:#4a4e57;cursor:not-allowed;}
+
+  .entry{
+    background:var(--charcoal-2);
+    border:1px solid var(--line);
+    border-right:4px solid var(--hazard);
+    border-radius:10px;
+    padding:14px 16px;
+    margin-bottom:10px;
+    font-size:14px;
+    position:relative;
+  }
+  .entry.local{border-right-color:var(--safe);}
+  .entry-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;}
+  .entry-eq{font-weight:700;font-size:15.5px;}
+  .entry-type{
+    font-family:'Oswald',sans-serif;
+    font-size:11px;font-weight:700;
+    padding:3px 9px;border-radius:20px;
+    background:var(--hazard);color:#ffffff;
+    white-space:nowrap;
+  }
+  .entry.local .entry-type{background:var(--safe);color:#fff;}
+  .entry-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;color:var(--ink-dim);}
+  .entry-grid b{color:var(--ink);font-weight:700;}
+  .entry-time{color:var(--ink-dim);font-size:11.5px;margin-top:8px;text-align:left;}
+  .del-btn{
+    background:transparent;border:none;color:var(--danger);
+    font-size:18px;cursor:pointer;padding:2px 6px;line-height:1;
+  }
+  .empty-state{
+    text-align:center;color:var(--ink-dim);padding:30px 10px;font-size:14px;
+  }
+  .empty-state .ic{font-size:34px;display:block;margin-bottom:8px;}
+
+  .loading{text-align:center;color:var(--ink-dim);padding:20px;font-size:14px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="lock-badge">🔒</div>
+    <div>
+      <h1>سجل عزل المعدات</h1>
+      <div class="subtitle">خط 1 · شات داون</div>
+      <div class="org-name">إدارة السلامة والصحة المهنية - شركة اسمنت العامرية</div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <div class="card">
+    <label><span class="step-num">1</span> اسم الفني</label>
+    <div class="field">
+      <input type="text" id="techName" placeholder="اكتب اسمك بالكامل">
+    </div>
+    <label><span class="step-num">2</span> المنطقة (السلامة والصحة المهنية)</label>
+    <div class="field">
+      <input type="text" id="area" placeholder="مثال: منطقة الأبراج - خط 1">
+    </div>
+  </div>
+
+  <div class="card">
+    <label><span class="step-num">3</span> اسم المعدة التي تم عزلها</label>
+    <div class="field">
+      <input type="text" id="equipment" placeholder="مثال: مضخة تغذية رقم 2">
+    </div>
+
+    <label><span class="step-num">4</span> نوع العزل</label>
+    <div class="field">
+      <div class="toggle-row">
+        <button type="button" class="toggle-btn" id="btnPower" onclick="selectType('power')">
+          <span class="ic">⚡</span> فصل كهربائي (Power Off)
+        </button>
+        <button type="button" class="toggle-btn" id="btnLocal" onclick="selectType('local')">
+          <span class="ic">🔧</span> عزل ميكانيكي (Local)
+        </button>
+      </div>
+    </div>
+
+    <label><span class="step-num">5</span> رقم مفتاح القفل</label>
+    <div class="field">
+      <input type="text" id="lockKey" placeholder="مثال: L-045">
+    </div>
+  </div>
+
+  <div class="card">
+    <label><span class="step-num">6</span> مسئول العزل (العامرية)</label>
+    <div class="grid2">
+      <div class="field">
+        <input type="text" id="respName" placeholder="اسم مسئول العزل">
+      </div>
+      <div class="field">
+        <input type="text" id="respDept" placeholder="الإدارة">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <button class="confirm-btn" id="confirmBtn" onclick="confirmEntry()">
+      ✅ تأكيد وحفظ العزل
+    </button>
+    <div class="error-note" id="errNote">فضلاً املأ كل الحقول قبل التأكيد</div>
+  </div>
+
+  <div class="card">
+    <div class="log-header">
+      <div class="log-title">📋 سجل العزلات <span class="count-chip" id="countChip">0</span></div>
+      <button class="export-btn" id="exportBtn" onclick="exportExcel()" disabled>⬇️ تصدير Excel</button>
+    </div>
+    <div id="logList"><div class="loading">جاري تحميل السجل...</div></div>
+  </div>
+
+</main>
+
+<div class="toast" id="toast">✅ تم حفظ العزل بنجاح</div>
+
+<script>
+let selectedType = null;
+let entries = [];
+const STORAGE_KEY = 'isolation_entries';
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyLDFmb2IYwJxj0nEdmieffXIKv9EbkFGh1LeJwlvWHndipiI-ffO04PkuGvyHB2u1Kag/exec';
+
+function sendToSheet(entry){
+  fetch(SHEET_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(entry)
+  }).catch(err => console.error('sheet sync failed', err));
+}
+
+function selectType(type){
+  selectedType = type;
+  document.getElementById('btnPower').classList.toggle('active', type==='power');
+  document.getElementById('btnLocal').classList.toggle('active', type==='local');
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2600);
+}
+
+async function loadEntries(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, true);
+    entries = res && res.value ? JSON.parse(res.value) : [];
+  }catch(e){
+    entries = [];
+  }
+  renderLog();
+}
+
+async function saveEntries(){
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify(entries), true);
+  }catch(e){
+    console.error('storage error', e);
+  }
+}
+
+function renderLog(){
+  const list = document.getElementById('logList');
+  document.getElementById('countChip').textContent = entries.length;
+  document.getElementById('exportBtn').disabled = entries.length === 0;
+
+  if(entries.length === 0){
+    list.innerHTML = '<div class="empty-state"><span class="ic">🗂️</span>لا توجد عزلات مسجلة حتى الآن</div>';
+    return;
+  }
+
+  list.innerHTML = entries.slice().reverse().map((e, idxRev) => {
+    const idx = entries.length - 1 - idxRev;
+    const typeLabel = e.type === 'power' ? '⚡ فصل كهربائي' : '🔧 عزل ميكانيكي';
+    const typeClass = e.type === 'local' ? 'local' : '';
+    return `<div class="entry ${typeClass}">
+      <div class="entry-top">
+        <div class="entry-eq">${escapeHtml(e.equipment)}</div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div class="entry-type">${typeLabel}</div>
+          <button class="del-btn" onclick="deleteEntry(${idx})" title="حذف">✕</button>
+        </div>
+      </div>
+      <div class="entry-grid">
+        <div><b>الفني:</b> ${escapeHtml(e.techName)}</div>
+        <div><b>المنطقة:</b> ${escapeHtml(e.area)}</div>
+        <div><b>مفتاح القفل:</b> ${escapeHtml(e.lockKey)}</div>
+        <div><b>مسئول العزل:</b> ${escapeHtml(e.respName)}</div>
+        <div><b>الإدارة:</b> ${escapeHtml(e.respDept)}</div>
+      </div>
+      <div class="entry-time">${e.timestamp}</div>
+    </div>`;
+  }).join('');
+}
+
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+async function deleteEntry(idx){
+  if(!confirm('هل تريد حذف هذا السجل؟')) return;
+  entries.splice(idx,1);
+  await saveEntries();
+  renderLog();
+}
+
+async function confirmEntry(){
+  const techName = document.getElementById('techName').value.trim();
+  const area = document.getElementById('area').value.trim();
+  const equipment = document.getElementById('equipment').value.trim();
+  const lockKey = document.getElementById('lockKey').value.trim();
+  const respName = document.getElementById('respName').value.trim();
+  const respDept = document.getElementById('respDept').value.trim();
+  const errNote = document.getElementById('errNote');
+
+  if(!techName || !area || !equipment || !selectedType || !lockKey || !respName || !respDept){
+    errNote.style.display = 'block';
+    return;
+  }
+  errNote.style.display = 'none';
+
+  const btn = document.getElementById('confirmBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ جاري الحفظ...';
+
+  const now = new Date();
+  const entry = {
+    techName, area, equipment,
+    type: selectedType,
+    lockKey, respName, respDept,
+    timestamp: now.toLocaleString('ar-EG', {dateStyle:'medium', timeStyle:'short'})
+  };
+  entries.push(entry);
+  await saveEntries();
+  sendToSheet(entry);
+  renderLog();
+
+  // reset form
+  document.getElementById('techName').value = '';
+  document.getElementById('area').value = '';
+  document.getElementById('equipment').value = '';
+  document.getElementById('lockKey').value = '';
+  document.getElementById('respName').value = '';
+  document.getElementById('respDept').value = '';
+  selectedType = null;
+  document.getElementById('btnPower').classList.remove('active');
+  document.getElementById('btnLocal').classList.remove('active');
+
+  btn.disabled = false;
+  btn.innerHTML = '✅ تأكيد وحفظ العزل';
+  showToast('✅ تم حفظ العزل بنجاح');
+}
+
+function exportExcel(){
+  if(entries.length === 0) return;
+  const rows = entries.map(e => ({
+    'اسم الفني': e.techName,
+    'المنطقة': e.area,
+    'المعدة المعزولة': e.equipment,
+    'نوع العزل': e.type === 'power' ? 'فصل كهربائي (Power Off)' : 'عزل ميكانيكي (Local)',
+    'رقم مفتاح القفل': e.lockKey,
+    'مسئول العزل': e.respName,
+    'الإدارة': e.respDept,
+    'تاريخ ووقت التسجيل': e.timestamp
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [{wch:18},{wch:20},{wch:22},{wch:24},{wch:16},{wch:18},{wch:16},{wch:22}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'سجل العزل');
+  const dateStr = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `سجل_العزل_خط1_${dateStr}.xlsx`);
+}
+
+loadEntries();
+</script>
+
+</body>
+</html>
