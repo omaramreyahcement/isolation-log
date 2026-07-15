@@ -254,11 +254,11 @@
 <main>
 
   <div class="card">
-    <label><span class="step-num">1</span> اسم الفني</label>
+    <label><span class="step-num">1</span> اسم مسئول السلامة</label>
     <div class="field">
       <input type="text" id="techName" placeholder="اكتب اسمك بالكامل">
     </div>
-    <label><span class="step-num">2</span> المنطقة (السلامة والصحة المهنية)</label>
+    <label><span class="step-num">2</span> المنطقة المسئول عنها</label>
     <div class="field">
       <input type="text" id="area" placeholder="مثال: منطقة الأبراج - خط 1">
     </div>
@@ -270,7 +270,12 @@
       <input type="text" id="equipment" placeholder="مثال: مضخة تغذية رقم 2">
     </div>
 
-    <label><span class="step-num">4</span> نوع العزل</label>
+    <label><span class="step-num">4</span> رقم المعدة</label>
+    <div class="field">
+      <input type="text" id="equipmentNumber" placeholder="مثال: P-1023">
+    </div>
+
+    <label><span class="step-num">5</span> نوع العزل</label>
     <div class="field">
       <div class="toggle-row">
         <button type="button" class="toggle-btn" id="btnPower" onclick="selectType('power')">
@@ -282,14 +287,14 @@
       </div>
     </div>
 
-    <label><span class="step-num">5</span> رقم مفتاح القفل</label>
+    <label><span class="step-num">6</span> رقم مفتاح القفل</label>
     <div class="field">
       <input type="text" id="lockKey" placeholder="مثال: L-045">
     </div>
   </div>
 
   <div class="card">
-    <label><span class="step-num">6</span> مسئول العزل (العامرية)</label>
+    <label><span class="step-num">7</span> مسئول العزل (العامرية)</label>
     <div class="grid2">
       <div class="field">
         <input type="text" id="respName" placeholder="اسم مسئول العزل">
@@ -298,7 +303,11 @@
         <input type="text" id="respDept" placeholder="الإدارة">
       </div>
     </div>
+    <div class="field" style="margin-top:14px;">
+      <input type="text" id="respPhone" placeholder="رقم هاتف مسئول العزل" inputmode="tel">
+    </div>
   </div>
+
 
   <div class="card">
     <button class="confirm-btn" id="confirmBtn" onclick="confirmEntry()">
@@ -381,17 +390,18 @@ function renderLog(){
     const typeClass = e.type === 'local' ? 'local' : '';
     return `<div class="entry ${typeClass}">
       <div class="entry-top">
-        <div class="entry-eq">${escapeHtml(e.equipment)}</div>
+        <div class="entry-eq">${escapeHtml(e.equipment)}${e.equipmentNumber ? ' <span style="color:var(--ink-dim);font-weight:500;font-size:13px;">('+escapeHtml(e.equipmentNumber)+')</span>' : ''}</div>
         <div style="display:flex;align-items:center;gap:6px;">
           <div class="entry-type">${typeLabel}</div>
           <button class="del-btn" onclick="deleteEntry(${idx})" title="حذف">✕</button>
         </div>
       </div>
       <div class="entry-grid">
-        <div><b>الفني:</b> ${escapeHtml(e.techName)}</div>
+        <div><b>مسئول السلامة:</b> ${escapeHtml(e.techName)}</div>
         <div><b>المنطقة:</b> ${escapeHtml(e.area)}</div>
         <div><b>مفتاح القفل:</b> ${escapeHtml(e.lockKey)}</div>
         <div><b>مسئول العزل:</b> ${escapeHtml(e.respName)}</div>
+        <div><b>هاتف مسئول العزل:</b> ${escapeHtml(e.respPhone)}</div>
         <div><b>الإدارة:</b> ${escapeHtml(e.respDept)}</div>
       </div>
       <div class="entry-time">${e.timestamp}</div>
@@ -416,12 +426,14 @@ async function confirmEntry(){
   const techName = document.getElementById('techName').value.trim();
   const area = document.getElementById('area').value.trim();
   const equipment = document.getElementById('equipment').value.trim();
+  const equipmentNumber = document.getElementById('equipmentNumber').value.trim();
   const lockKey = document.getElementById('lockKey').value.trim();
   const respName = document.getElementById('respName').value.trim();
+  const respPhone = document.getElementById('respPhone').value.trim();
   const respDept = document.getElementById('respDept').value.trim();
   const errNote = document.getElementById('errNote');
 
-  if(!techName || !area || !equipment || !selectedType || !lockKey || !respName || !respDept){
+  if(!techName || !area || !equipment || !equipmentNumber || !selectedType || !lockKey || !respName || !respPhone || !respDept){
     errNote.style.display = 'block';
     return;
   }
@@ -433,9 +445,9 @@ async function confirmEntry(){
 
   const now = new Date();
   const entry = {
-    techName, area, equipment,
+    techName, area, equipment, equipmentNumber,
     type: selectedType,
-    lockKey, respName, respDept,
+    lockKey, respName, respPhone, respDept,
     timestamp: now.toLocaleString('ar-EG', {dateStyle:'medium', timeStyle:'short'})
   };
   entries.push(entry);
@@ -447,8 +459,10 @@ async function confirmEntry(){
   document.getElementById('techName').value = '';
   document.getElementById('area').value = '';
   document.getElementById('equipment').value = '';
+  document.getElementById('equipmentNumber').value = '';
   document.getElementById('lockKey').value = '';
   document.getElementById('respName').value = '';
+  document.getElementById('respPhone').value = '';
   document.getElementById('respDept').value = '';
   selectedType = null;
   document.getElementById('btnPower').classList.remove('active');
@@ -462,17 +476,19 @@ async function confirmEntry(){
 function exportExcel(){
   if(entries.length === 0) return;
   const rows = entries.map(e => ({
-    'اسم الفني': e.techName,
-    'المنطقة': e.area,
-    'المعدة المعزولة': e.equipment,
+    'اسم مسئول السلامة': e.techName,
+    'المنطقة المسئول عنها': e.area,
+    'اسم المعدة': e.equipment,
+    'رقم المعدة': e.equipmentNumber,
     'نوع العزل': e.type === 'power' ? 'فصل كهربائي (Power Off)' : 'عزل ميكانيكي (Local)',
     'رقم مفتاح القفل': e.lockKey,
     'مسئول العزل': e.respName,
+    'هاتف مسئول العزل': e.respPhone,
     'الإدارة': e.respDept,
     'تاريخ ووقت التسجيل': e.timestamp
   }));
   const ws = XLSX.utils.json_to_sheet(rows);
-  ws['!cols'] = [{wch:18},{wch:20},{wch:22},{wch:24},{wch:16},{wch:18},{wch:16},{wch:22}];
+  ws['!cols'] = [{wch:18},{wch:20},{wch:20},{wch:14},{wch:24},{wch:16},{wch:18},{wch:16},{wch:16},{wch:22}];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'سجل العزل');
   const dateStr = new Date().toISOString().slice(0,10);
